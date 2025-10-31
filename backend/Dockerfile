@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7
 FROM rust:1.81 as base
 WORKDIR /app
-RUN cargo install cargo-watch
+RUN cargo install cargo-watch --version 8.1.1 --locked
 COPY . .
 
 FROM base as dev
