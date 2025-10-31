@@ -37,7 +37,13 @@ services:
       - ./backend:/app
       - cargo-cache:/usr/local/cargo/registry
       - target-cache:/app/target
-    command: ["bash", "-lc", "cargo watch -x run"]
+    entrypoint: ["/bin/bash","-lc"]
+    command: |
+      set -e
+      echo "PATH=$PATH"
+      which cargo || true
+      cargo --version
+      cargo watch -x run
 
   frontend:
     build:
@@ -58,7 +64,13 @@ services:
       - ./frontend:/app
       - cargo-cache:/usr/local/cargo/registry
       - target-cache:/app/target
-    command: ["bash", "-lc", "cargo watch -x run"]
+    entrypoint: ["/bin/bash","-lc"]
+    command: |
+      set -e
+      echo "PATH=$PATH"
+      which cargo || true
+      cargo --version
+      cargo watch -x run
 
 volumes:
   db-data:
