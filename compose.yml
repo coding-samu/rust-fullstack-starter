@@ -21,6 +21,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       target: dev
+    image: rust-fullstack-starter-backend-dev
     container_name: rustfs_backend
     environment:
       DATABASE_URL: postgres://app:app@db:5432/appdb
@@ -36,12 +37,14 @@ services:
       - ./backend:/app
       - cargo-cache:/usr/local/cargo/registry
       - target-cache:/app/target
+    command: ["bash", "-lc", "cargo watch -x run"]
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
       target: dev
+    image: rust-fullstack-starter-frontend-dev
     container_name: rustfs_frontend
     environment:
       RUST_LOG: info
@@ -55,6 +58,7 @@ services:
       - ./frontend:/app
       - cargo-cache:/usr/local/cargo/registry
       - target-cache:/app/target
+    command: ["bash", "-lc", "cargo watch -x run"]
 
 volumes:
   db-data:
