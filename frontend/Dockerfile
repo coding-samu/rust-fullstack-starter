@@ -10,8 +10,11 @@ CMD ["bash", "-lc", "cargo watch -x run"]
 FROM rust:1.81 as build
 WORKDIR /app
 RUN rustup target add wasm32-unknown-unknown && cargo install cargo-leptos
-COPY Cargo.toml Cargo.lock .
+# Copy Cargo.toml and optionally Cargo.lock (may not exist in fresh workspace)
+COPY Cargo.toml ./
+COPY Cargo.loc[k] ./
 COPY src ./src
+# Generate lock file if missing and build
 RUN cargo leptos build --release
 
 FROM nginx:alpine as runtime
