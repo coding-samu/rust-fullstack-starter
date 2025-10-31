@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-FROM rust:1.81 as base
+FROM rust:1.86 as base
 WORKDIR /app
 RUN rustup target add wasm32-unknown-unknown && \
     cargo install cargo-watch --version 8.1.1 --locked
