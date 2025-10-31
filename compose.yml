@@ -37,7 +37,7 @@ services:
       - ./backend:/app
       - cargo-cache:/usr/local/cargo/registry
       - target-cache:/app/target
-    command: ["bash","-lc","echo PATH=$PATH; which cargo || true; cargo --version; exec cargo watch -x run"]
+    command: ["bash","-lc","exec cargo watch -x run"]
 
   frontend:
     build:
@@ -58,7 +58,7 @@ services:
       - ./frontend:/app
       - cargo-cache:/usr/local/cargo/registry
       - target-cache:/app/target
-    command: ["bash","-lc","echo PATH=$PATH; which cargo || true; cargo --version; exec cargo watch -x run"]
+    command: ["bash","-lc","exec cargo watch -x run"]
 
 volumes:
   db-data:
