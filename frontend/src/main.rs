@@ -1,4 +1,5 @@
 use leptos::prelude::*;
+use leptos::view; // ensure view! macro is in scope
 use leptos_axum::LeptosRoutes;
 use axum::{routing::get, Router};
 use serde::{Deserialize, Serialize};
