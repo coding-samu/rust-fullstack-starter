@@ -6,7 +6,6 @@ use leptos::Callback;
 use leptos::event_target_value;
 use leptos::CollectView;
 use leptos::Callable; // enable .call on Callback
-use leptos::prelude::on_mount; // import on_mount from prelude explicitly
 use axum::{response::IntoResponse, routing::get, Router};
 use serde::{Deserialize, Serialize};
 
