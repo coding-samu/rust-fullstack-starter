@@ -55,14 +55,21 @@ fn HomePage() -> impl IntoView {
         <h1>"Homepage"</h1>
         <CreateForm on_created=refresh />
         <ul>
-          { move || match posts.get() {
-              Some(data) => {
-                eprintln!("[frontend] Rendering {} posts", data.len());
-                data.into_iter()
-                    .map(|p| view!{ <li><b>{p.title.clone()}</b> - {p.content.clone()}</li> })
-                    .collect_view()
-              },
-              None => view!{ <li>"Caricamento..."</li> }.into_view(),
+          { move || {
+              let posts_result = posts.get();
+              eprintln!("[frontend] posts.get() is_some = {}", posts_result.is_some());
+              match posts_result {
+                Some(data) => {
+                  eprintln!("[frontend] Rendering {} posts", data.len());
+                  data.into_iter()
+                      .map(|p| view!{ <li><b>{p.title.clone()}</b> - {p.content.clone()}</li> })
+                      .collect_view()
+                },
+                None => {
+                  eprintln!("[frontend] Rendering loading state");
+                  view!{ <li>"Caricamento..."</li> }.into_view()
+                }
+              }
           }}
         </ul>
       </div>
