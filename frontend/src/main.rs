@@ -4,6 +4,7 @@ use leptos::component;
 use leptos::IntoView;
 use leptos::event_target_value;
 use leptos::CollectView;
+use leptos::create_resource; // added for reactive fetch
 use axum::{response::IntoResponse, routing::get, Router};
 use serde::{Deserialize, Serialize};
 
