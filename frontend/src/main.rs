@@ -35,6 +35,7 @@ async fn main() {
     let app = Router::new()
         .route("/", get(homepage).post(create_and_redirect))
         .route("/create", post(create_and_redirect))
+        .route("/delete", post(delete_and_redirect))
         .nest_service("/assets", ServeDir::new("target/site"))
         .with_state(state);
 
@@ -73,6 +74,24 @@ async fn create_and_redirect(
     (StatusCode::SEE_OTHER, [(header::LOCATION, "/")]).into_response()
 }
 
+#[derive(Deserialize)]
+struct DeleteFormInput {
+    id: String,
+}
+
+async fn delete_and_redirect(
+    State(state): State<AppState>,
+    Form(input): Form<DeleteFormInput>,
+) -> impl IntoResponse {
+    let _ = state
+        .client
+        .delete(format!("{}/api/posts/{}", API_BASE, input.id))
+        .send()
+        .await;
+
+    (StatusCode::SEE_OTHER, [(header::LOCATION, "/")]).into_response()
+}
+
 async fn fetch_posts(state: &AppState) -> anyhow::Result<Vec<PostItem>> {
     let resp = state
         .client
@@ -87,9 +106,10 @@ fn render_index(posts: &Vec<PostItem>) -> String {
     let mut items = String::new();
     for p in posts {
         items.push_str(&format!(
-            "<li><strong>{}</strong> — {}</li>",
+            "<li><strong>{}</strong> — {}\n              <form method=\"post\" action=\"/delete\" style=\"display:inline; margin-left:8px;\">\n                <input type=\"hidden\" name=\"id\" value=\"{}\" />\n                <button type=\"submit\" onclick=\"return confirm('Sicuro di voler eliminare?')\" style=\"font-size:12px; color:#c33; background:transparent; border:none; cursor:pointer;\">🗑️</button>\n              </form>\n            </li>",
             html_escape(&p.title),
-            html_escape(&p.content)
+            html_escape(&p.content),
+            html_escape(&p.id)
         ));
     }
 
@@ -108,6 +128,7 @@ fn render_index(posts: &Vec<PostItem>) -> String {
     button {{ padding: 10px 14px; border-radius: 8px; border: none; background: #21808d; color: #fff; cursor: pointer; }}
     button:hover {{ background: #1d7480; }}
     ul {{ padding-left: 18px; }}
+    .row form {{ display: inline; }}
   </style>
 </head>
 <body>
