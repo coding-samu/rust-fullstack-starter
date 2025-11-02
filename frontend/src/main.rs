@@ -14,48 +14,54 @@ const API_BASE: &str = "http://rustfs_backend:3000"; // use service name inside 
 
 #[component]
 fn HomePage() -> impl IntoView {
-    let (posts, set_posts) = create_signal::<Vec<PostItem>>(vec![]);
-
-    // Local fetch function used safely without reactive owner requirements
-    let do_fetch = {
-        let set_posts = set_posts.clone();
-        move || {
-            eprintln!("[frontend] GET {}/api/posts", API_BASE);
-            leptos::spawn_local(async move {
-                match reqwest::Client::new().get(format!("{}/api/posts", API_BASE)).send().await {
-                    Ok(resp) => {
-                        let status = resp.status();
-                        eprintln!("[frontend] GET status {status}");
-                        match resp.json::<Vec<PostItem>>().await {
-                            Ok(data) => {
-                                eprintln!("[frontend] GET ok items={}", data.len());
-                                if let Some(first) = data.get(0) { eprintln!("[frontend] First item: {:?}", first); }
-                                set_posts.set(data);
-                            }
-                            Err(e) => eprintln!("[frontend] GET json error: {e}"),
+    // Resource per il fetch reattivo dei post
+    let posts = create_resource(
+        || (),
+        |_| async move {
+            eprintln!("[frontend] RESOURCE GET {}/api/posts", API_BASE);
+            match reqwest::Client::new()
+                .get(format!("{}/api/posts", API_BASE))
+                .send()
+                .await
+            {
+                Ok(resp) => {
+                    let status = resp.status();
+                    eprintln!("[frontend] RESOURCE GET status {status}");
+                    match resp.json::<Vec<PostItem>>().await {
+                        Ok(data) => {
+                            eprintln!("[frontend] RESOURCE GET ok items={}", data.len());
+                            data
+                        }
+                        Err(e) => {
+                            eprintln!("[frontend] RESOURCE GET json error: {e}");
+                            vec![]
                         }
                     }
-                    Err(e) => eprintln!("[frontend] GET error: {e}"),
                 }
-            });
-        }
-    };
+                Err(e) => {
+                    eprintln!("[frontend] RESOURCE GET error: {e}");
+                    vec![]
+                }
+            }
+        },
+    );
 
-    // Initial fetch
-    do_fetch();
+    // Closure per refresh dopo submit
+    let refresh = move || posts.refetch();
 
     view! {
       <div class="container">
         <h1>"Homepage"</h1>
-        <CreateForm on_created={{
-          let do_fetch = do_fetch.clone();
-          move || do_fetch()
-        }} />
+        <CreateForm on_created=refresh />
         <ul>
-          { move || {
-              let posts_data = posts.get();
-              eprintln!("[frontend] Rendering {} posts", posts_data.len());
-              posts_data.into_iter().map(|p| view!{ <li><b>{p.title.clone()}</b> - {p.content.clone()}</li> }).collect_view()
+          { move || match posts.get() {
+              Some(data) => {
+                eprintln!("[frontend] Rendering {} posts", data.len());
+                data.into_iter()
+                    .map(|p| view!{ <li><b>{p.title.clone()}</b> - {p.content.clone()}</li> })
+                    .collect_view()
+              },
+              None => view!{ <li>"Caricamento..."</li> }.into_view(),
           }}
         </ul>
       </div>
@@ -64,7 +70,8 @@ fn HomePage() -> impl IntoView {
 
 #[component]
 fn CreateForm(on_created: impl Fn() + 'static) -> impl IntoView {
-    let on_created = std::rc::Rc::new(on_created);
+    use std::rc::Rc;
+    let on_created = Rc::new(on_created);
     let (title, set_title) = create_signal(String::new());
     let (content, set_content) = create_signal(String::new());
 
@@ -84,7 +91,7 @@ fn CreateForm(on_created: impl Fn() + 'static) -> impl IntoView {
                     Ok(resp) => {
                         let status = resp.status();
                         eprintln!("[frontend] POST status {status}");
-                        (on_created)();
+                        on_created(); // refetch
                     }
                     Err(e) => eprintln!("[frontend] POST error: {e}"),
                 }
