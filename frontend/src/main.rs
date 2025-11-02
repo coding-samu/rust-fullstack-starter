@@ -36,6 +36,7 @@ async fn main() {
         .route("/", get(homepage).post(create_and_redirect))
         .route("/create", post(create_and_redirect))
         .route("/delete", post(delete_and_redirect))
+        .route("/edit", post(edit_and_redirect))
         .nest_service("/assets", ServeDir::new("target/site"))
         .with_state(state);
 
@@ -70,14 +71,11 @@ async fn create_and_redirect(
         .send()
         .await;
 
-    // Redirect back to /
     (StatusCode::SEE_OTHER, [(header::LOCATION, "/")]).into_response()
 }
 
 #[derive(Deserialize)]
-struct DeleteFormInput {
-    id: String,
-}
+struct DeleteFormInput { id: String }
 
 async fn delete_and_redirect(
     State(state): State<AppState>,
@@ -86,6 +84,23 @@ async fn delete_and_redirect(
     let _ = state
         .client
         .delete(format!("{}/api/posts/{}", API_BASE, input.id))
+        .send()
+        .await;
+
+    (StatusCode::SEE_OTHER, [(header::LOCATION, "/")]).into_response()
+}
+
+#[derive(Deserialize)]
+struct EditFormInput { id: String, title: String, content: String }
+
+async fn edit_and_redirect(
+    State(state): State<AppState>,
+    Form(input): Form<EditFormInput>,
+) -> impl IntoResponse {
+    let _ = state
+        .client
+        .put(format!("{}/api/posts/{}", API_BASE, input.id))
+        .json(&serde_json::json!({"title": input.title, "content": input.content}))
         .send()
         .await;
 
@@ -106,10 +121,11 @@ fn render_index(posts: &Vec<PostItem>) -> String {
     let mut items = String::new();
     for p in posts {
         items.push_str(&format!(
-            "<li><strong>{}</strong> — {}\n              <form method=\"post\" action=\"/delete\" style=\"display:inline; margin-left:8px;\">\n                <input type=\"hidden\" name=\"id\" value=\"{}\" />\n                <button type=\"submit\" onclick=\"return confirm('Sicuro di voler eliminare?')\" style=\"font-size:12px; color:#c33; background:transparent; border:none; cursor:pointer;\">🗑️</button>\n              </form>\n            </li>",
+            "<li class=\"row\">\n              <form method=\"post\" action=\"/edit\" style=\"display:inline; margin-right:8px;\">\n                <input type=\"hidden\" name=\"id\" value=\"{}\" />\n                <input type=\"text\" name=\"title\" value=\"{}\" style=\"padding:6px 8px; border:1px solid #ccc; border-radius:6px;\" />\n                <input type=\"text\" name=\"content\" value=\"{}\" style=\"padding:6px 8px; border:1px solid #ccc; border-radius:6px; margin-left:6px;\" />\n                <button type=\"submit\" style=\"padding:6px 10px; margin-left:6px;\">Salva</button>\n              </form>\n              <form method=\"post\" action=\"/delete\" style=\"display:inline; margin-left:8px;\">\n                <input type=\"hidden\" name=\"id\" value=\"{}\" />\n                <button type=\"submit\" onclick=\"return confirm('Sicuro di voler eliminare?')\" style=\"font-size:12px; color:#c33; background:transparent; border:none; cursor:pointer;\">🗑️</button>\n              </form>\n            </li>",
+            html_escape(&p.id),
             html_escape(&p.title),
             html_escape(&p.content),
-            html_escape(&p.id)
+            html_escape(&p.id),
         ));
     }
 
@@ -122,20 +138,21 @@ fn render_index(posts: &Vec<PostItem>) -> String {
   <title>Homepage</title>
   <style>
     body {{ font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 24px; }}
-    .container {{ max-width: 720px; margin: 0 auto; }}
-    form {{ display: grid; gap: 12px; margin: 16px 0 24px; }}
+    .container {{ max-width: 900px; margin: 0 auto; }}
+    form.top {{ display: grid; gap: 12px; margin: 16px 0 24px; grid-template-columns: 1fr 2fr auto; }}
     input[type=text] {{ padding: 10px 12px; border: 1px solid #ccc; border-radius: 8px; }}
     button {{ padding: 10px 14px; border-radius: 8px; border: none; background: #21808d; color: #fff; cursor: pointer; }}
     button:hover {{ background: #1d7480; }}
-    ul {{ padding-left: 18px; }}
-    .row form {{ display: inline; }}
+    ul {{ padding-left: 18px; list-style: none; }}
+    .row {{ margin-bottom: 8px; }}
+    .row input[type=text] {{ font-size: 14px; }}
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Homepage</h1>
 
-    <form method="post" action="/create">
+    <form class="top" method="post" action="/create">
       <input type="text" name="title" placeholder="Titolo" required />
       <input type="text" name="content" placeholder="Contenuto" required />
       <button type="submit">Crea Post</button>
