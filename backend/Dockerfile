@@ -1,11 +1,11 @@
 # syntax=docker/dockerfile:1.7
 FROM rust:1.88 as base
 WORKDIR /app
-RUN cargo install cargo-watch --version 8.1.1 --locked
+RUN cargo install cargo-watch --version 8.4.0
 COPY . .
 
 FROM base as dev
-CMD ["bash", "-lc", "cargo watch -x run"]
+CMD ["/usr/local/cargo/bin/cargo", "watch", "-x", "run"]
 
 FROM rust:1.88 as build
 WORKDIR /app
