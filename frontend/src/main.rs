@@ -5,6 +5,8 @@ use leptos::IntoView;
 use leptos::Callback;
 use leptos::event_target_value;
 use leptos::CollectView;
+use leptos::Callable; // enable .call on Callback
+use leptos::on_mount; // ensure symbol in scope explicitly
 use axum::{response::IntoResponse, routing::get, Router};
 use serde::{Deserialize, Serialize};
 
