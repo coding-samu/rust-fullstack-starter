@@ -16,16 +16,26 @@ struct PostItem { id: String, title: String, content: String, created_at: String
 fn HomePage() -> impl IntoView {
     let (posts, set_posts) = create_signal::<Vec<PostItem>>(vec![]);
 
-    let fetch = Callback::new(move |_| {
-        wasm_bindgen_futures::spawn_local(async move {
-            if let Ok(resp) = reqwest::Client::new().get("/api/posts").send().await {
-                if let Ok(data) = resp.json::<Vec<PostItem>>().await { set_posts.set(data); }
-            }
-        });
+    // Local fetch function used safely without relying on Callback context
+    let do_fetch = {
+        let set_posts = set_posts.clone();
+        move || {
+            leptos::spawn_local(async move {
+                if let Ok(resp) = reqwest::Client::new().get("/api/posts").send().await {
+                    if let Ok(data) = resp.json::<Vec<PostItem>>().await { set_posts.set(data); }
+                }
+            });
+        }
+    };
+
+    // Callback used by child to trigger refresh after submit
+    let fetch = Callback::new({
+        let do_fetch = do_fetch.clone();
+        move |_| do_fetch()
     });
 
-    // Trigger fetch once at first render without relying on on_mount
-    leptos::spawn_local({ let fetch = fetch.clone(); async move { fetch.call(()); } });
+    // Initial fetch on first render, no reactive owner issues
+    do_fetch();
 
     view! {
       <div class="container">
