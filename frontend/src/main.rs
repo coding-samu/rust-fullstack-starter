@@ -2,10 +2,8 @@ use leptos::prelude::*;
 use leptos::view;
 use leptos::component;
 use leptos::IntoView;
-use leptos::Callback;
 use leptos::event_target_value;
 use leptos::CollectView;
-use leptos::Callable;
 use axum::{response::IntoResponse, routing::get, Router};
 use serde::{Deserialize, Serialize};
 
@@ -16,7 +14,7 @@ struct PostItem { id: String, title: String, content: String, created_at: String
 fn HomePage() -> impl IntoView {
     let (posts, set_posts) = create_signal::<Vec<PostItem>>(vec![]);
 
-    // Local fetch function used safely without relying on Callback context
+    // Local fetch function used safely without reactive owner requirements
     let do_fetch = {
         let set_posts = set_posts.clone();
         move || {
@@ -28,19 +26,16 @@ fn HomePage() -> impl IntoView {
         }
     };
 
-    // Callback used by child to trigger refresh after submit
-    let fetch = Callback::new({
-        let do_fetch = do_fetch.clone();
-        move |_| do_fetch()
-    });
-
-    // Initial fetch on first render, no reactive owner issues
+    // Initial fetch
     do_fetch();
 
     view! {
       <div class="container">
         <h1>"Homepage"</h1>
-        <CreateForm on_created=fetch.clone() />
+        <CreateForm on_created={
+          let do_fetch = do_fetch.clone();
+          move || do_fetch()
+        } />
         <ul>
           { move || posts.get().into_iter().map(|p| view!{ <li><b>{p.title.clone()}</b> - {p.content.clone()}</li> }).collect_view() }
         </ul>
@@ -49,7 +44,7 @@ fn HomePage() -> impl IntoView {
 }
 
 #[component]
-fn CreateForm(on_created: Callback<()>) -> impl IntoView {
+fn CreateForm(on_created: impl Fn() + 'static) -> impl IntoView {
     let (title, set_title) = create_signal(String::new());
     let (content, set_content) = create_signal(String::new());
 
@@ -62,7 +57,7 @@ fn CreateForm(on_created: Callback<()>) -> impl IntoView {
                 .post("/api/posts")
                 .json(&serde_json::json!({"title": t, "content": c}))
                 .send().await;
-            on_created.call(());
+            on_created();
         });
     };
 
