@@ -29,6 +29,7 @@ fn HomePage() -> impl IntoView {
                         match resp.json::<Vec<PostItem>>().await {
                             Ok(data) => {
                                 eprintln!("[frontend] GET ok items={}", data.len());
+                                if let Some(first) = data.get(0) { eprintln!("[frontend] First item: {:?}", first); }
                                 set_posts.set(data);
                             }
                             Err(e) => eprintln!("[frontend] GET json error: {e}"),
@@ -51,7 +52,11 @@ fn HomePage() -> impl IntoView {
           move || do_fetch()
         }} />
         <ul>
-          { move || posts.get().into_iter().map(|p| view!{ <li><b>{p.title.clone()}</b> - {p.content.clone()}</li> }).collect_view() }
+          { move || {
+              let posts_data = posts.get();
+              eprintln!("[frontend] Rendering {} posts", posts_data.len());
+              posts_data.into_iter().map(|p| view!{ <li><b>{p.title.clone()}</b> - {p.content.clone()}</li> }).collect_view()
+          }}
         </ul>
       </div>
     }
