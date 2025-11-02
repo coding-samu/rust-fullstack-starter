@@ -5,7 +5,7 @@ use leptos::IntoView;
 use leptos::Callback;
 use leptos::event_target_value;
 use leptos::CollectView;
-use leptos::Callable; // enable .call on Callback
+use leptos::Callable;
 use axum::{response::IntoResponse, routing::get, Router};
 use serde::{Deserialize, Serialize};
 
@@ -24,7 +24,8 @@ fn HomePage() -> impl IntoView {
         });
     });
 
-    leptos::prelude::on_mount({ let fetch = fetch.clone(); move || fetch.call(()) });
+    // Trigger fetch once at first render without relying on on_mount
+    leptos::spawn_local({ let fetch = fetch.clone(); async move { fetch.call(()); } });
 
     view! {
       <div class="container">
@@ -46,7 +47,7 @@ fn CreateForm(on_created: Callback<()>) -> impl IntoView {
         ev.prevent_default();
         let t = title.get();
         let c = content.get();
-        wasm_bindgen_futures::spawn_local(async move {
+        leptos::spawn_local(async move {
             let _ = reqwest::Client::new()
                 .post("/api/posts")
                 .json(&serde_json::json!({"title": t, "content": c}))
