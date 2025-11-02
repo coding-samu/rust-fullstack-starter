@@ -1,6 +1,10 @@
 use leptos::prelude::*;
 use leptos::view; // ensure view! macro is in scope
-use leptos_axum::LeptosRoutes;
+use leptos::component;
+use leptos::IntoView;
+use leptos::Callback;
+use leptos::event_target_value;
+use leptos::on_mount;
 use axum::{routing::get, Router};
 use serde::{Deserialize, Serialize};
 
