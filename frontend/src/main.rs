@@ -10,6 +10,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Serialize, Deserialize)]
 struct PostItem { id: String, title: String, content: String, created_at: String }
 
+const API_BASE: &str = "http://rustfs_backend:3000"; // use service name inside Docker network
+
 #[component]
 fn HomePage() -> impl IntoView {
     let (posts, set_posts) = create_signal::<Vec<PostItem>>(vec![]);
@@ -18,9 +20,9 @@ fn HomePage() -> impl IntoView {
     let do_fetch = {
         let set_posts = set_posts.clone();
         move || {
-            eprintln!("[frontend] GET /api/posts");
+            eprintln!("[frontend] GET {}/api/posts", API_BASE);
             leptos::spawn_local(async move {
-                match reqwest::Client::new().get("http://localhost:3000/api/posts").send().await {
+                match reqwest::Client::new().get(format!("{}/api/posts", API_BASE)).send().await {
                     Ok(resp) => {
                         let status = resp.status();
                         eprintln!("[frontend] GET status {status}");
@@ -68,10 +70,10 @@ fn CreateForm(on_created: impl Fn() + 'static) -> impl IntoView {
             let t = title.get();
             let c = content.get();
             let on_created = on_created.clone();
-            eprintln!("[frontend] POST /api/posts title='{t}'");
+            eprintln!("[frontend] POST {}/api/posts title='{t}'", API_BASE);
             leptos::spawn_local(async move {
                 match reqwest::Client::new()
-                    .post("http://localhost:3000/api/posts")
+                    .post(format!("{}/api/posts", API_BASE))
                     .json(&serde_json::json!({"title": t, "content": c}))
                     .send().await {
                     Ok(resp) => {
