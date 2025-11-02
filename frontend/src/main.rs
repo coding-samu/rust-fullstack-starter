@@ -6,7 +6,6 @@ use leptos::Callback;
 use leptos::event_target_value;
 use leptos::CollectView;
 use leptos::Callable; // enable .call on Callback
-use leptos_reactive::lifecycle::on_mount; // robust import for Leptos 0.6
 use axum::{response::IntoResponse, routing::get, Router};
 use serde::{Deserialize, Serialize};
 
@@ -25,7 +24,7 @@ fn HomePage() -> impl IntoView {
         });
     });
 
-    on_mount({ let fetch = fetch.clone(); move || fetch.call(()) });
+    leptos::prelude::on_mount({ let fetch = fetch.clone(); move || fetch.call(()) });
 
     view! {
       <div class="container">
