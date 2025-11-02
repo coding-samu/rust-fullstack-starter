@@ -65,7 +65,7 @@ async fn get_post(State(state): State<AppState>, Path(id): Path<Uuid>) -> impl I
         .fetch_optional(&state.pool)
         .await
     {
-        Ok(Some(p)) => Json(p).into_response(),
+        Ok(Some(p)) => axum::Json::<PostItem>(p).into_response(),
         Ok(None) => StatusCode::NOT_FOUND.into_response(),
         Err(_) => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
     }
