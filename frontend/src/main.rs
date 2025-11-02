@@ -32,10 +32,10 @@ fn HomePage() -> impl IntoView {
     view! {
       <div class="container">
         <h1>"Homepage"</h1>
-        <CreateForm on_created={
+        <CreateForm on_created={{
           let do_fetch = do_fetch.clone();
           move || do_fetch()
-        } />
+        }} />
         <ul>
           { move || posts.get().into_iter().map(|p| view!{ <li><b>{p.title.clone()}</b> - {p.content.clone()}</li> }).collect_view() }
         </ul>
@@ -45,20 +45,25 @@ fn HomePage() -> impl IntoView {
 
 #[component]
 fn CreateForm(on_created: impl Fn() + 'static) -> impl IntoView {
+    let on_created = std::rc::Rc::new(on_created);
     let (title, set_title) = create_signal(String::new());
     let (content, set_content) = create_signal(String::new());
 
-    let submit = move |ev: leptos::ev::SubmitEvent| {
-        ev.prevent_default();
-        let t = title.get();
-        let c = content.get();
-        leptos::spawn_local(async move {
-            let _ = reqwest::Client::new()
-                .post("/api/posts")
-                .json(&serde_json::json!({"title": t, "content": c}))
-                .send().await;
-            on_created();
-        });
+    let submit = {
+        let on_created = on_created.clone();
+        move |ev: leptos::ev::SubmitEvent| {
+            ev.prevent_default();
+            let t = title.get();
+            let c = content.get();
+            let on_created = on_created.clone();
+            leptos::spawn_local(async move {
+                let _ = reqwest::Client::new()
+                    .post("/api/posts")
+                    .json(&serde_json::json!({"title": t, "content": c}))
+                    .send().await;
+                (on_created)();
+            });
+        }
     };
 
     view! {
