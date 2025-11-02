@@ -2,7 +2,7 @@ use axum::{
     extract::{Path, State},
     http::StatusCode,
     response::IntoResponse,
-    routing::get,
+    routing::{delete, get},
     Json, Router,
 };
 use serde::{Deserialize, Serialize};
@@ -40,7 +40,7 @@ async fn main() -> anyhow::Result<()> {
 
     let app = Router::new()
         .route("/api/posts", get(list_posts).post(create_post))
-        .route("/api/posts/:id", get(get_post).put(update_post))
+        .route("/api/posts/:id", get(get_post).put(update_post).delete(delete_post))
         .route("/", get(homepage))
         .layer(CorsLayer::permissive())
         .with_state(state);
@@ -52,7 +52,6 @@ async fn main() -> anyhow::Result<()> {
 }
 
 async fn homepage(State(state): State<AppState>) -> impl IntoResponse {
-    // Show latest posts
     let posts: Vec<PostItem> = sqlx::query_as!(PostItem, r#"SELECT id, title, content, created_at FROM posts ORDER BY created_at DESC LIMIT 20"#)
         .fetch_all(&state.pool)
         .await
@@ -99,6 +98,17 @@ async fn update_post(State(state): State<AppState>, Path(id): Path<Uuid>, Json(i
     )
     .execute(&state.pool)
     .await;
+    match res {
+        Ok(r) if r.rows_affected() > 0 => StatusCode::NO_CONTENT.into_response(),
+        Ok(_) => StatusCode::NOT_FOUND.into_response(),
+        Err(_) => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+    }
+}
+
+async fn delete_post(State(state): State<AppState>, Path(id): Path<Uuid>) -> impl IntoResponse {
+    let res = sqlx::query!(r#"DELETE FROM posts WHERE id = $1"#, id)
+        .execute(&state.pool)
+        .await;
     match res {
         Ok(r) if r.rows_affected() > 0 => StatusCode::NO_CONTENT.into_response(),
         Ok(_) => StatusCode::NOT_FOUND.into_response(),
