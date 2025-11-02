@@ -18,21 +18,21 @@ fn HomePage() -> impl IntoView {
     let do_fetch = {
         let set_posts = set_posts.clone();
         move || {
-            web_sys::console::log_1(&"[frontend] GET /api/posts".into());
+            eprintln!("[frontend] GET /api/posts");
             leptos::spawn_local(async move {
                 match reqwest::Client::new().get("http://localhost:3000/api/posts").send().await {
                     Ok(resp) => {
                         let status = resp.status();
-                        web_sys::console::log_1(&format!("[frontend] GET status {status}").into());
+                        eprintln!("[frontend] GET status {status}");
                         match resp.json::<Vec<PostItem>>().await {
                             Ok(data) => {
-                                web_sys::console::log_1(&format!("[frontend] GET ok items={} ", data.len()).into());
+                                eprintln!("[frontend] GET ok items={}", data.len());
                                 set_posts.set(data);
                             }
-                            Err(e) => web_sys::console::log_1(&format!("[frontend] GET json error: {e}").into()),
+                            Err(e) => eprintln!("[frontend] GET json error: {e}"),
                         }
                     }
-                    Err(e) => web_sys::console::log_1(&format!("[frontend] GET error: {e}").into()),
+                    Err(e) => eprintln!("[frontend] GET error: {e}"),
                 }
             });
         }
@@ -68,7 +68,7 @@ fn CreateForm(on_created: impl Fn() + 'static) -> impl IntoView {
             let t = title.get();
             let c = content.get();
             let on_created = on_created.clone();
-            web_sys::console::log_1(&format!("[frontend] POST /api/posts title='{t}'").into());
+            eprintln!("[frontend] POST /api/posts title='{t}'");
             leptos::spawn_local(async move {
                 match reqwest::Client::new()
                     .post("http://localhost:3000/api/posts")
@@ -76,10 +76,10 @@ fn CreateForm(on_created: impl Fn() + 'static) -> impl IntoView {
                     .send().await {
                     Ok(resp) => {
                         let status = resp.status();
-                        web_sys::console::log_1(&format!("[frontend] POST status {status}").into());
+                        eprintln!("[frontend] POST status {status}");
                         (on_created)();
                     }
-                    Err(e) => web_sys::console::log_1(&format!("[frontend] POST error: {e}").into()),
+                    Err(e) => eprintln!("[frontend] POST error: {e}"),
                 }
             });
         }
