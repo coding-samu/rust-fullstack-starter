@@ -8,6 +8,7 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use std::{env, net::SocketAddr};
+use tower_http::cors::CorsLayer;
 use tracing_subscriber::EnvFilter;
 use uuid::Uuid;
 
@@ -41,6 +42,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/api/posts", get(list_posts).post(create_post))
         .route("/api/posts/:id", get(get_post).put(update_post))
         .route("/", get(homepage))
+        .layer(CorsLayer::permissive())
         .with_state(state);
 
     let addr: SocketAddr = format!("{}:{}", host, port).parse()?;
