@@ -18,9 +18,21 @@ fn HomePage() -> impl IntoView {
     let do_fetch = {
         let set_posts = set_posts.clone();
         move || {
+            web_sys::console::log_1(&"[frontend] GET /api/posts".into());
             leptos::spawn_local(async move {
-                if let Ok(resp) = reqwest::Client::new().get("/api/posts").send().await {
-                    if let Ok(data) = resp.json::<Vec<PostItem>>().await { set_posts.set(data); }
+                match reqwest::Client::new().get("http://localhost:3000/api/posts").send().await {
+                    Ok(resp) => {
+                        let status = resp.status();
+                        web_sys::console::log_1(&format!("[frontend] GET status {status}").into());
+                        match resp.json::<Vec<PostItem>>().await {
+                            Ok(data) => {
+                                web_sys::console::log_1(&format!("[frontend] GET ok items={} ", data.len()).into());
+                                set_posts.set(data);
+                            }
+                            Err(e) => web_sys::console::log_1(&format!("[frontend] GET json error: {e}").into()),
+                        }
+                    }
+                    Err(e) => web_sys::console::log_1(&format!("[frontend] GET error: {e}").into()),
                 }
             });
         }
@@ -56,12 +68,19 @@ fn CreateForm(on_created: impl Fn() + 'static) -> impl IntoView {
             let t = title.get();
             let c = content.get();
             let on_created = on_created.clone();
+            web_sys::console::log_1(&format!("[frontend] POST /api/posts title='{t}'").into());
             leptos::spawn_local(async move {
-                let _ = reqwest::Client::new()
-                    .post("/api/posts")
+                match reqwest::Client::new()
+                    .post("http://localhost:3000/api/posts")
                     .json(&serde_json::json!({"title": t, "content": c}))
-                    .send().await;
-                (on_created)();
+                    .send().await {
+                    Ok(resp) => {
+                        let status = resp.status();
+                        web_sys::console::log_1(&format!("[frontend] POST status {status}").into());
+                        (on_created)();
+                    }
+                    Err(e) => web_sys::console::log_1(&format!("[frontend] POST error: {e}").into()),
+                }
             });
         }
     };
