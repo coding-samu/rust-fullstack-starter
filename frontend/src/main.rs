@@ -1,11 +1,11 @@
 use leptos::prelude::*;
-use leptos::view; // ensure view! macro is in scope
+use leptos::view;
 use leptos::component;
 use leptos::IntoView;
 use leptos::Callback;
 use leptos::event_target_value;
-use leptos::on_mount;
-use axum::{routing::get, Router};
+use leptos::CollectView;
+use axum::{response::IntoResponse, routing::get, Router};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -15,20 +15,20 @@ struct PostItem { id: String, title: String, content: String, created_at: String
 fn HomePage() -> impl IntoView {
     let (posts, set_posts) = create_signal::<Vec<PostItem>>(vec![]);
 
-    let fetch = move |_| {
+    let fetch = Callback::new(move |_| {
         wasm_bindgen_futures::spawn_local(async move {
             if let Ok(resp) = reqwest::Client::new().get("/api/posts").send().await {
                 if let Ok(data) = resp.json::<Vec<PostItem>>().await { set_posts.set(data); }
             }
         });
-    };
+    });
 
-    on_mount(fetch);
+    on_mount({ let fetch = fetch.clone(); move || fetch.call(()) });
 
     view! {
       <div class="container">
         <h1>"Homepage"</h1>
-        <CreateForm on_created=fetch />
+        <CreateForm on_created=fetch.clone() />
         <ul>
           { move || posts.get().into_iter().map(|p| view!{ <li><b>{p.title.clone()}</b> - {p.content.clone()}</li> }).collect_view() }
         </ul>
@@ -50,7 +50,7 @@ fn CreateForm(on_created: Callback<()>) -> impl IntoView {
                 .post("/api/posts")
                 .json(&serde_json::json!({"title": t, "content": c}))
                 .send().await;
-            on_created(());
+            on_created.call(());
         });
     };
 
@@ -67,8 +67,13 @@ fn CreateForm(on_created: Callback<()>) -> impl IntoView {
 async fn main() {
     tracing_subscriber::fmt().with_env_filter("info").init();
 
+    let leptos_options = leptos::LeptosOptions::builder()
+        .output_name("frontend")
+        .site_addr(std::net::SocketAddr::from(([0,0,0,0], 3001)))
+        .build();
+
     let app = Router::new()
-        .route("/", get(leptos_axum::render_app_to_stream(|| view!{ <HomePage/> })))
+        .route("/", get(leptos_axum::render_app_to_stream(leptos_options, || view!{ <HomePage/> })))
         .fallback_service(axum::routing::get_service(tower_http::services::ServeDir::new("target/site")).handle_error(|err| async move {
             (axum::http::StatusCode::INTERNAL_SERVER_ERROR, format!("{err}")).into_response()
         }));
