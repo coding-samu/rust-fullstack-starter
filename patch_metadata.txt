@@ -1,5 +1,5 @@
 -- migrations/ directory rename
-# Trasloco e rinomina dei file .sql nel formato numerico accettato da sqlx
+# Trasferimento e rinomina dei file .sql nel formato numerico accettato da sqlx
 # da '2025-10-30-000001_create_posts_table.sql' a '000001_create_posts_table.sql'
 
 -- aggiunta dipendenza anyhow in backend/Cargo.toml
