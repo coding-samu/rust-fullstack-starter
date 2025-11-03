@@ -8,7 +8,7 @@
 │   ├── Cargo.toml
 │   ├── Dockerfile
 │   ├── migrations/
-│   │   └── 2025-10-30-000001_create_posts_table.sql
+│   │   └── 000001_create_posts_table.sql
 │   └── src/
 │       └── main.rs
 └── frontend/
