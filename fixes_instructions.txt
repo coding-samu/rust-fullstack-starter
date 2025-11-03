@@ -22,12 +22,6 @@ Ok(Some(p)) => axum::Json::<PostItem>(p).into_response(),
 
 frontend/src/main.rs:
 
-use leptos::component;
-use leptos::IntoView;
-use leptos::Callback;
-use leptos::event_target_value;
-use leptos::on_mount;
-
 frontend/Cargo.toml:
 
 [dependencies]
