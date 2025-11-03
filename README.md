@@ -1,11 +1,2 @@
-# Rust Full-Stack Starter
-
-Stack:
-- Backend: Axum + SQLx (PostgreSQL)
-- Frontend: Leptos (SSR with hydration)
-- DB: PostgreSQL
-- ORM/Query: SQLx (runtime-checked) to simplify Docker builds
-- Dev: cargo-watch
-- Container: Multi-stage Dockerfiles + docker-compose
-
-See docs/ for setup and commands.
+# rust-fullstack-starter
+Starter full-stack Rust web app (Axum backend + Leptos frontend) with PostgreSQL, Dockerized via multi-stage builds and docker-compose.
