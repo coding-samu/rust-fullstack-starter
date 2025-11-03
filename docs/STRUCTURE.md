@@ -31,7 +31,7 @@ docker compose up --build
   - GET/PUT /api/posts/:id
   - GET /             -> JSON con ultimi post (per semplicità)
 
-- Frontend (Leptos):
+- Frontend (Axum, server-side HTML rendering):
   - http://localhost:3001
 
 # Note
