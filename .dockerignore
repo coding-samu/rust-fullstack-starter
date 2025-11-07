@@ -1,0 +1,16 @@
+target/
+**/target/
+**/.cargo/
+**/.idea/
+**/.vscode/
+**/node_modules/
+.dist/
+.env
+.sqlx/
+.git/
+.gitignore
+README.md
+docs/
+compose.yml
+Dockerfile*
+*.md

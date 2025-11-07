@@ -1,0 +1,67 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: rustfs_db
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: appdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d appdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: dev
+    image: rust-fullstack-starter-backend-dev
+    container_name: rustfs_backend
+    environment:
+      DATABASE_URL: postgres://app:app@db:5432/appdb
+      RUST_LOG: info
+      HOST: 0.0.0.0
+      PORT: 3000
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend:/app
+      - cargo-cache:/usr/local/cargo/registry
+      - target-cache:/app/target
+    command: ["/usr/local/cargo/bin/cargo","watch","-x","run"]
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: dev
+    image: rust-fullstack-starter-frontend-dev
+    container_name: rustfs_frontend
+    environment:
+      RUST_LOG: info
+      LEPTOS_SITE_ADDR: 0.0.0.0:3001
+      BACKEND_ORIGIN: http://backend:3000
+    depends_on:
+      - backend
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./frontend:/app
+      - cargo-cache:/usr/local/cargo/registry
+      - target-cache:/app/target
+    command: ["/usr/local/cargo/bin/cargo","watch","-x","run"]
+
+volumes:
+  db-data:
+  cargo-cache:
+  target-cache:
+

@@ -1,0 +1,28 @@
+backend/migrations/000001_create_posts_table.sql:
+-- SQL migration file renamed for sqlx compatibility
+CREATE TABLE posts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+backend/Cargo.toml:
+
+[dependencies]
+anyhow = "1"
+
+backend/src/main.rs:
+
+// Add this explicit import
+use anyhow::Result;
+
+// Modify Json response at line 68:
+Ok(Some(p)) => axum::Json::<PostItem>(p).into_response(),
+
+frontend/src/main.rs:
+
+frontend/Cargo.toml:
+
+[dependencies]
+tower-http = { version = "0.6", features = ["fs"] }

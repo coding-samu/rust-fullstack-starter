@@ -1,0 +1,22 @@
+-- migrations/ directory rename
+# Trasferimento e rinomina dei file .sql nel formato numerico accettato da sqlx
+# da '2025-10-30-000001_create_posts_table.sql' a '000001_create_posts_table.sql'
+
+-- aggiunta dipendenza anyhow in backend/Cargo.toml
+[dependencies]
+anyhow = "1"
+
+# backend/src/main.rs: specifica tipizzazione Json
+Ok(Some(p)) => axum::Json::<PostItem>(p).into_response(),
+
+-- frontend/src/main.rs aggiunta import mancanti
+use leptos::component;
+use leptos::IntoView;
+use leptos::Callback;
+use leptos::event_target_value;
+use leptos::on_mount;
+
+-- aggiunta dipendenza tower_http in frontend/Cargo.toml
+
+[dependencies]
+tower-http = { version = "0.6", features = ["fs"] }
