@@ -8,12 +8,13 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
 use tower_http::services::ServeDir;
+use uuid::Uuid;
 
 const API_BASE: &str = "http://rustfs_backend:3000"; // Docker service hostname
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct PostItem {
-    id: String,
+    id: Uuid,
     title: String,
     content: String,
     created_at: chrono::DateTime<chrono::Utc>,
@@ -75,7 +76,7 @@ async fn create_and_redirect(
 }
 
 #[derive(Deserialize)]
-struct DeleteFormInput { id: String }
+struct DeleteFormInput { id: Uuid }
 
 async fn delete_and_redirect(
     State(state): State<AppState>,
@@ -91,7 +92,7 @@ async fn delete_and_redirect(
 }
 
 #[derive(Deserialize)]
-struct EditFormInput { id: String, title: String, content: String }
+struct EditFormInput { id: Uuid, title: String, content: String }
 
 async fn edit_and_redirect(
     State(state): State<AppState>,
@@ -122,10 +123,10 @@ fn render_index(posts: &[PostItem]) -> String {
     for p in posts {
         items.push_str(&format!(
             "<li class=\"row\">\n              <form method=\"post\" action=\"/edit\" style=\"display:inline; margin-right:8px;\">\n                <input type=\"hidden\" name=\"id\" value=\"{}\" />\n                <input type=\"text\" name=\"title\" value=\"{}\" style=\"padding:6px 8px; border:1px solid #ccc; border-radius:6px;\" />\n                <input type=\"text\" name=\"content\" value=\"{}\" style=\"padding:6px 8px; border:1px solid #ccc; border-radius:6px; margin-left:6px;\" />\n                <button type=\"submit\" style=\"padding:6px 10px; margin-left:6px;\">Salva</button>\n              </form>\n              <form method=\"post\" action=\"/delete\" style=\"display:inline; margin-left:8px;\">\n                <input type=\"hidden\" name=\"id\" value=\"{}\" />\n                <button type=\"submit\" onclick=\"return confirm('Sicuro di voler eliminare?')\" style=\"font-size:12px; color:#c33; background:transparent; border:none; cursor:pointer;\">🗑️</button>\n              </form>\n            </li>",
-            html_escape(&p.id),
+            html_escape(&p.id.to_string()),
             html_escape(&p.title),
             html_escape(&p.content),
-            html_escape(&p.id),
+            html_escape(&p.id.to_string()),
         ));
     }
 
