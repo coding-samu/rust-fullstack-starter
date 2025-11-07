@@ -16,7 +16,7 @@ struct PostItem {
     id: String,
     title: String,
     content: String,
-    created_at: String,
+    created_at: chrono::DateTime<chrono::Utc>,
 }
 
 #[derive(Clone)]
