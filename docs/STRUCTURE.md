@@ -8,7 +8,7 @@
 │   ├── Cargo.toml
 │   ├── Dockerfile
 │   ├── migrations/
-│   │   └── 2025-10-30-000001_create_posts_table.sql
+│   │   └── 000001_create_posts_table.sql
 │   └── src/
 │       └── main.rs
 └── frontend/
@@ -31,7 +31,7 @@ docker compose up --build
   - GET/PUT /api/posts/:id
   - GET /             -> JSON con ultimi post (per semplicità)
 
-- Frontend (Leptos):
+- Frontend (Axum, server-side HTML rendering):
   - http://localhost:3001
 
 # Note

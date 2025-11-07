@@ -17,7 +17,7 @@ struct PostItem {
     id: Uuid,
     title: String,
     content: String,
-    created_at: String,
+    created_at: chrono::DateTime<chrono::Utc>,
 }
 
 #[derive(Clone)]
@@ -118,7 +118,7 @@ async fn fetch_posts(state: &AppState) -> anyhow::Result<Vec<PostItem>> {
     Ok(posts)
 }
 
-fn render_index(posts: &Vec<PostItem>) -> String {
+fn render_index(posts: &[PostItem]) -> String {
     let mut items = String::new();
     for p in posts {
         items.push_str(&format!(
